@@ -7,6 +7,7 @@
 package org.mule.runtime.core.internal.streaming.bytes;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Simple implementation of {@link ByteBufferManager}
@@ -15,12 +16,17 @@ import java.nio.ByteBuffer;
  */
 public class SimpleByteBufferManager implements ByteBufferManager {
 
+  private final AtomicLong totalBufferMemory = new AtomicLong(0);
+
   /**
    * {@inheritDoc}
    */
   @Override
   public ByteBuffer allocate(int capacity) {
-    return ByteBuffer.allocate(capacity);
+    ByteBuffer buffer = ByteBuffer.allocate(capacity);
+    totalBufferMemory.addAndGet(capacity);
+
+    return buffer;
   }
 
   /**
@@ -29,6 +35,6 @@ public class SimpleByteBufferManager implements ByteBufferManager {
    */
   @Override
   public void deallocate(ByteBuffer byteBuffer) {
-
+    totalBufferMemory.addAndGet(-byteBuffer.capacity());
   }
 }
