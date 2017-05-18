@@ -18,6 +18,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
 import org.apache.commons.pool2.BasePooledObjectFactory;
@@ -45,6 +46,9 @@ public class PoolingByteBufferManager implements ByteBufferManager, Disposable {
   private static final int UNBOUNDED = -1;
   private static final int MAX_IDLE = Runtime.getRuntime().availableProcessors();
 
+  private AtomicLong borrows = new AtomicLong(0);
+  private AtomicLong returns = new AtomicLong(0);
+
   //private final KeyedObjectPool<Integer, ByteBuffer> pool = createPool();
 
   private final LoadingCache<Integer, ObjectPool<ByteBuffer>> pools = CacheBuilder.newBuilder()
@@ -71,7 +75,10 @@ public class PoolingByteBufferManager implements ByteBufferManager, Disposable {
   @Override
   public ByteBuffer allocate(int capacity) {
     try {
-      return pools.getUnchecked(capacity).borrowObject();
+      ByteBuffer b = pools.getUnchecked(capacity).borrowObject();
+      //borrows.addAndGet(1);
+      //log("BORROWING: -->");
+      return b;
     } catch (Exception e) {
       throw new MuleRuntimeException(createStaticMessage("Could not allocate byte buffer"), e);
     }
@@ -80,6 +87,14 @@ public class PoolingByteBufferManager implements ByteBufferManager, Disposable {
     //} catch (Exception e) {
     //  throw new MuleRuntimeException(createStaticMessage("Could not allocate byte buffer"), e);
     //}
+  }
+
+  private void log(String prefix) {
+    long borrows = this.borrows.get();
+    long returns = this.returns.get();
+    long delta = borrows - returns;
+
+    System.out.println(String.format("%s Borrows: %d | returns: %d | delta %d", prefix, borrows, returns, delta));
   }
 
   /**
@@ -101,6 +116,8 @@ public class PoolingByteBufferManager implements ByteBufferManager, Disposable {
           LOGGER.debug("Could not deallocate buffer of capacity " + capacity, e);
         }
       }
+      //returns.addAndGet(1);
+      //log("RETURNING: -->");
     }
 
     //final int capacity = byteBuffer.capacity();
