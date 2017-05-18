@@ -6,16 +6,10 @@
  */
 package org.mule.runtime.core.internal.streaming.bytes;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.slf4j.LoggerFactory.getLogger;
 import org.mule.runtime.api.exception.MuleRuntimeException;
 import org.mule.runtime.api.lifecycle.Disposable;
-
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicLong;
@@ -23,7 +17,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.KeyedObjectPool;
-import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
@@ -49,44 +42,44 @@ public class PoolingByteBufferManager implements ByteBufferManager, Disposable {
   private AtomicLong borrows = new AtomicLong(0);
   private AtomicLong returns = new AtomicLong(0);
 
-  //private final KeyedObjectPool<Integer, ByteBuffer> pool = createPool();
+  private final KeyedObjectPool<Integer, ByteBuffer> pool = createPool();
 
-  private final LoadingCache<Integer, ObjectPool<ByteBuffer>> pools = CacheBuilder.newBuilder()
-      .expireAfterAccess(10, SECONDS)
-      .removalListener((RemovalListener<Integer, ObjectPool<ByteBuffer>>) notification -> {
-        try {
-          notification.getValue().close();
-        } catch (Exception e) {
-          if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Found exception trying to dispose buffer pool for capacity " + notification.getKey(), e);
-          }
-        }
-      }).build(new CacheLoader<Integer, ObjectPool<ByteBuffer>>() {
-
-        @Override
-        public ObjectPool<ByteBuffer> load(Integer capacity) throws Exception {
-          return createPool(capacity);
-        }
-      });
+  //private final LoadingCache<Integer, ObjectPool<ByteBuffer>> pools = CacheBuilder.newBuilder()
+  //    .expireAfterAccess(10, SECONDS)
+  //    .removalListener((RemovalListener<Integer, ObjectPool<ByteBuffer>>) notification -> {
+  //      try {
+  //        notification.getValue().close();
+  //      } catch (Exception e) {
+  //        if (LOGGER.isDebugEnabled()) {
+  //          LOGGER.debug("Found exception trying to dispose buffer pool for capacity " + notification.getKey(), e);
+  //        }
+  //      }
+  //    }).build(new CacheLoader<Integer, ObjectPool<ByteBuffer>>() {
+  //
+  //      @Override
+  //      public ObjectPool<ByteBuffer> load(Integer capacity) throws Exception {
+  //        return createPool(capacity);
+  //      }
+  //    });
 
   /**
    * {@inheritDoc}
    */
   @Override
   public ByteBuffer allocate(int capacity) {
-    try {
-      ByteBuffer b = pools.getUnchecked(capacity).borrowObject();
-      //borrows.addAndGet(1);
-      //log("BORROWING: -->");
-      return b;
-    } catch (Exception e) {
-      throw new MuleRuntimeException(createStaticMessage("Could not allocate byte buffer"), e);
-    }
     //try {
-    //  return pool.borrowObject(capacity);
+    //  ByteBuffer b = pools.getUnchecked(capacity).borrowObject();
+    //  //borrows.addAndGet(1);
+    //  //log("BORROWING: -->");
+    //  return b;
     //} catch (Exception e) {
     //  throw new MuleRuntimeException(createStaticMessage("Could not allocate byte buffer"), e);
     //}
+    try {
+      return pool.borrowObject(capacity);
+    } catch (Exception e) {
+      throw new MuleRuntimeException(createStaticMessage("Could not allocate byte buffer"), e);
+    }
   }
 
   private void log(String prefix) {
@@ -102,44 +95,44 @@ public class PoolingByteBufferManager implements ByteBufferManager, Disposable {
    */
   @Override
   public void deallocate(ByteBuffer byteBuffer) {
-    int capacity = byteBuffer.capacity();
-    ObjectPool<ByteBuffer> pool = pools.getIfPresent(capacity);
-    if (pool != null) {
-      try {
-        if (pool.getNumIdle() > MAX_IDLE) {
-          pool.invalidateObject(byteBuffer);
-        } else {
-          pool.returnObject(byteBuffer);
-        }
-      } catch (Exception e) {
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("Could not deallocate buffer of capacity " + capacity, e);
-        }
-      }
-      //returns.addAndGet(1);
-      //log("RETURNING: -->");
-    }
-
-    //final int capacity = byteBuffer.capacity();
-    //try {
-    //  if (pool.getNumIdle(capacity) > MAX_IDLE) {
-    //    pool.invalidateObject(capacity, byteBuffer);
-    //  } else {
-    //    pool.returnObject(capacity, byteBuffer);
+    //int capacity = byteBuffer.capacity();
+    //ObjectPool<ByteBuffer> pool = pools.getIfPresent(capacity);
+    //if (pool != null) {
+    //  try {
+    //    if (pool.getNumIdle() > MAX_IDLE) {
+    //      pool.invalidateObject(byteBuffer);
+    //    } else {
+    //      pool.returnObject(byteBuffer);
+    //    }
+    //  } catch (Exception e) {
+    //    if (LOGGER.isDebugEnabled()) {
+    //      LOGGER.debug("Could not deallocate buffer of capacity " + capacity, e);
+    //    }
     //  }
-    //} catch (Exception e) {
-    //  //if (LOGGER.isWarnEnabled()) {
-    //  //  LOGGER.warn("Could not deallocate buffer of capacity " + byteBuffer.capacity(), e);
-    //  //}
-    //  throw new RuntimeException(e);
+    //  //returns.addAndGet(1);
+    //  //log("RETURNING: -->");
     //}
+
+    final int capacity = byteBuffer.capacity();
+    try {
+      if (pool.getNumIdle(capacity) > MAX_IDLE) {
+        pool.invalidateObject(capacity, byteBuffer);
+      } else {
+        pool.returnObject(capacity, byteBuffer);
+      }
+    } catch (Exception e) {
+      //if (LOGGER.isWarnEnabled()) {
+      //  LOGGER.warn("Could not deallocate buffer of capacity " + byteBuffer.capacity(), e);
+      //}
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
   public void dispose() {
     try {
-      //pool.clear();
-      pools.invalidateAll();
+      pool.clear();
+      //pools.invalidateAll();
     } catch (Exception e) {
       if (LOGGER.isWarnEnabled()) {
         LOGGER.warn("Error disposing pool of byte buffers", e);
