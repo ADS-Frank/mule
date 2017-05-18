@@ -13,9 +13,7 @@ import static org.mule.runtime.extension.api.connectivity.oauth.ExtensionOAuthCo
 import static org.mule.runtime.extension.api.connectivity.oauth.ExtensionOAuthConstants.AFTER_FLOW_PARAMETER_NAME;
 import static org.mule.runtime.extension.api.connectivity.oauth.ExtensionOAuthConstants.AUTHORIZATION_URL_PARAMETER_NAME;
 import static org.mule.runtime.extension.api.connectivity.oauth.ExtensionOAuthConstants.BEFORE_FLOW_PARAMETER_NAME;
-import static org.mule.runtime.extension.api.connectivity.oauth.ExtensionOAuthConstants.CALLBACK_HOST_PARAMETER_NAME;
 import static org.mule.runtime.extension.api.connectivity.oauth.ExtensionOAuthConstants.CALLBACK_PATH_PARAMETER_NAME;
-import static org.mule.runtime.extension.api.connectivity.oauth.ExtensionOAuthConstants.CALLBACK_PORT_PARAMETER_NAME;
 import static org.mule.runtime.extension.api.connectivity.oauth.ExtensionOAuthConstants.CONSUMER_KEY_PARAMETER_NAME;
 import static org.mule.runtime.extension.api.connectivity.oauth.ExtensionOAuthConstants.CONSUMER_SECRET_PARAMETER_NAME;
 import static org.mule.runtime.extension.api.connectivity.oauth.ExtensionOAuthConstants.LISTENER_CONFIG_PARAMETER_NAME;
@@ -143,8 +141,6 @@ public class OAuthConnectionProviderObjectBuilder<C> extends DefaultConnectionPr
 
   private OAuthCallbackConfig buildOAuthCallbackConfig(Map<String, Object> map) {
     return new OAuthCallbackConfig((String) map.get(LISTENER_CONFIG_PARAMETER_NAME),
-                                   (String) map.get(CALLBACK_HOST_PARAMETER_NAME),
-                                   (int) map.get(CALLBACK_PORT_PARAMETER_NAME),
                                    sanitizePath((String) map.get(CALLBACK_PATH_PARAMETER_NAME)),
                                    sanitizePath((String) map.get(LOCAL_AUTHORIZE_PATH_PARAMETER_NAME)));
   }

@@ -6,10 +6,6 @@
  */
 package org.mule.runtime.module.extension.internal.runtime.connectivity.oauth;
 
-import static java.util.Optional.ofNullable;
-
-import java.util.Optional;
-
 /**
  * Groups the sum of all the parameters that a user configured in order to provision
  * an OAuth access token callback
@@ -19,29 +15,17 @@ import java.util.Optional;
 public final class OAuthCallbackConfig {
 
   private final String listenerConfig;
-  private final String host;
-  private final int port;
   private final String callbackPath;
   private final String localAuthorizePath;
 
-  public OAuthCallbackConfig(String listenerConfig, String host, int port, String callbackPath, String localAuthorizePath) {
+  public OAuthCallbackConfig(String listenerConfig, String callbackPath, String localAuthorizePath) {
     this.listenerConfig = listenerConfig;
-    this.host = host;
-    this.port = port;
     this.callbackPath = callbackPath;
     this.localAuthorizePath = localAuthorizePath;
   }
 
-  public Optional<String> getListenerConfig() {
-    return ofNullable(listenerConfig);
-  }
-
-  public String getHost() {
-    return host;
-  }
-
-  public int getPort() {
-    return port;
+  public String getListenerConfig() {
+    return listenerConfig;
   }
 
   public String getCallbackPath() {
