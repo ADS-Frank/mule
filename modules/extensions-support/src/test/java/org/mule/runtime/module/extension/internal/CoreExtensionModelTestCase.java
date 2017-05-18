@@ -66,8 +66,12 @@ import org.mule.runtime.api.store.ObjectStore;
 import org.mule.runtime.core.api.transformer.Transformer;
 import org.mule.runtime.core.routing.AggregationStrategy;
 import org.mule.runtime.core.source.scheduler.schedule.FixedFrequencyScheduler;
+import org.mule.runtime.core.util.FileUtils;
+import org.mule.runtime.extension.api.persistence.ExtensionModelJsonSerializer;
+import org.mule.runtime.module.extension.internal.resources.MuleExtensionModelProvider;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 
+import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
@@ -78,6 +82,13 @@ public class CoreExtensionModelTestCase extends AbstractMuleContextTestCase {
   private static final ErrorModel errorMuleAny = newError("ANY", "MULE").build();
 
   private static ExtensionModel coreExtensionModel = getMuleExtensionModel();
+
+  @Test
+  public void createModel() throws Exception {
+    ExtensionModel muleExtensionModel = MuleExtensionModelProvider.createMuleExtensionModel();
+    String json = new ExtensionModelJsonSerializer(true).serialize(muleExtensionModel);
+    FileUtils.writeStringToFile(new File("transform-model.json"), json);
+  }
 
   @Test
   public void consistentWithManifest() {

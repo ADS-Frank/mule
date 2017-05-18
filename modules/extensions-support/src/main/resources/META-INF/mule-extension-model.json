@@ -19,7 +19,7 @@
   "configurations": [],
   "operations": [
     {
-      "name": "collection-aggregator",
+      "name": "collectionAggregator",
       "kind": "operation",
       "blocking": true,
       "executionType": "BLOCKING",
@@ -981,7 +981,7 @@
                         },
                         "expressionSupport": {
                           "value": "NOT_SUPPORTED"
-                        },
+                        },                                                                                       
                         "layout": {
                           "layoutModel": {
                             "password": false,
@@ -1568,7 +1568,7 @@
       "modelProperties": {}
     },
     {
-      "name": "flow-ref",
+      "name": "flowRef",
       "kind": "operation",
       "blocking": true,
       "executionType": "CPU_LITE",
@@ -2074,7 +2074,7 @@
       "modelProperties": {}
     },
     {
-      "name": "scatter-gather",
+      "name": "scatterGather",
       "kind": "router",
       "blocking": true,
       "executionType": "CPU_LITE",
@@ -2408,7 +2408,7 @@
       "modelProperties": {}
     },
     {
-      "name": "error-handler",
+      "name": "errorHandler",
       "kind": "scope",
       "blocking": true,
       "executionType": "CPU_LITE",
@@ -2466,7 +2466,7 @@
       "modelProperties": {}
     },
     {
-      "name": "on-error-continue",
+      "name": "onErrorContinue",
       "kind": "scope",
       "blocking": true,
       "executionType": "CPU_LITE",
@@ -2667,7 +2667,7 @@
       "modelProperties": {}
     },
     {
-      "name": "on-error-propagate",
+      "name": "onErrorPropagate",
       "kind": "scope",
       "blocking": true,
       "executionType": "CPU_LITE",
