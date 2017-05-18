@@ -204,6 +204,14 @@
                     <groupId>wsdl4j</groupId>
                     <artifactId>wsdl4j</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.module</groupId>
+                    <artifactId>jackson-module-jsonSchema</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 
@@ -247,7 +255,6 @@
             <groupId>org.apache.ant</groupId>
             <artifactId>ant</artifactId>
             <version>${antVersion}</version>
-
         </dependency>
 
         <!-- add aspectj weaver dependency that was removed from spring-security-3.1 -->
@@ -255,6 +262,10 @@
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-jsonSchema</artifactId>
+            <version>${jackson2Version}</version>
+        </dependency>
     </dependencies>
 </project>
