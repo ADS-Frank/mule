@@ -188,6 +188,11 @@ public class PoolingByteBufferManager implements ByteBufferManager, Disposable {
       public PooledObject<ByteBuffer> wrap(ByteBuffer obj) {
         return new DefaultPooledObject<>(obj);
       }
+
+      @Override
+      public void activateObject(PooledObject<ByteBuffer> p) throws Exception {
+        p.getObject().clear();
+      }
     }, config);
     //GenericObjectPool.Config config = new GenericObjectPool.Config();
     //config.maxIdle = DEFAULT_MAX_IDLE;
