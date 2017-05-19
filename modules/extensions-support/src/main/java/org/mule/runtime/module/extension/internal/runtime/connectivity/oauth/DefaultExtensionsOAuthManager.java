@@ -219,7 +219,7 @@ public class DefaultExtensionsOAuthManager implements Startable, Stoppable, Exte
 
     dancerBuilder
         .localCallback(httpServer, callbackConfig.getCallbackPath())
-        //.externalCallbackUrl(httpServer.)
+        .externalCallbackUrl(getExternalCallback(httpServer, callbackConfig))
         .authorizationUrl(authCodeConfig.getAuthorizationUrl())
         .localAuthorizationUrlPath(callbackConfig.getLocalAuthorizePath())
         .localAuthorizationUrlResourceOwnerId(
@@ -239,6 +239,21 @@ public class DefaultExtensionsOAuthManager implements Startable, Stoppable, Exte
     }
 
     return dancer;
+  }
+
+  private String getExternalCallback(HttpServer httpServer, OAuthCallbackConfig callbackConfig) {
+    return callbackConfig.getExternalCallbackUrl().orElseGet(() -> {
+      try {
+        return new URL(httpServer.getProtocol().getScheme(),
+                httpServer.getServerAddress().getIp(),
+                httpServer.getServerAddress().getPort(),
+                callbackConfig.getCallbackPath())
+            .toExternalForm();
+      } catch (MalformedURLException e) {
+        throw new MuleRuntimeException(createStaticMessage(format(
+            "Could not derive a external callback url from <http:listener-config> '%s'", callbackConfig.getListenerConfig())), e);
+      }
+    });
   }
 
   private void start(AuthorizationCodeOAuthDancer dancer) throws MuleException {
