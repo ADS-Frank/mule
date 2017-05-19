@@ -18,9 +18,11 @@ import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.initialiseIfNee
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.startIfNeeded;
 import static org.mule.runtime.core.api.lifecycle.LifecycleUtils.stopIfNeeded;
 import static org.mule.runtime.core.api.processor.MessageProcessors.processToApply;
-import static org.mule.runtime.core.api.processor.ReactiveProcessor.ProcessingType.CPU_LITE_ASYNC;
 import static org.mule.runtime.core.api.processor.ReactiveProcessor.ProcessingType.CPU_LITE;
+import static org.mule.runtime.core.api.processor.ReactiveProcessor.ProcessingType.CPU_LITE_ASYNC;
 import static org.mule.runtime.core.api.rx.Exceptions.checkedFunction;
+import static org.mule.runtime.core.api.util.StreamingUtils.addStreamingAwesomenessInEntries;
+import static org.mule.runtime.core.api.util.StreamingUtils.resolveCursorProvidersInEntries;
 import static org.mule.runtime.core.el.mvel.MessageVariableResolverFactory.FLOW_VARS;
 import static org.mule.runtime.core.util.ClassUtils.withContextClassLoader;
 import static org.mule.runtime.module.extension.internal.runtime.ExecutionTypeMapper.asProcessingType;
@@ -32,7 +34,6 @@ import static org.mule.runtime.module.extension.internal.util.MuleExtensionUtils
 import static org.slf4j.LoggerFactory.getLogger;
 import static reactor.core.publisher.Flux.from;
 import static reactor.core.publisher.Mono.fromCallable;
-
 import org.mule.runtime.api.connection.ConnectionException;
 import org.mule.runtime.api.exception.MuleException;
 import org.mule.runtime.api.exception.MuleRuntimeException;
@@ -76,7 +77,6 @@ import java.util.Optional;
 
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
-
 import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
 
@@ -184,7 +184,13 @@ public class OperationMessageProcessor extends ExtensionComponent<OperationModel
 
   protected Mono<Event> doProcess(Event event, ExecutionContextAdapter<OperationModel> operationContext) {
     return executeOperation(operationContext)
-        .map(value -> returnDelegate.asReturnValue(value, operationContext))
+        .map(value -> {
+          operationContext.getParameters().values().stream()
+              .filter(v -> v instanceof Map)
+              .forEach(v -> addStreamingAwesomenessInEntries((Map) v, getCursorProviderFactory(), event));
+
+          return returnDelegate.asReturnValue(value, operationContext);
+        })
         .switchIfEmpty(fromCallable(() -> returnDelegate.asReturnValue(null, operationContext)))
         .onErrorMap(Exceptions::unwrap);
   }
@@ -319,7 +325,7 @@ public class OperationMessageProcessor extends ExtensionComponent<OperationModel
 
   @Override
   public Map<String, Object> resolveParameters(Event event) {
-    // TODO MULE-11527 avoid doing unnecesary evaluations
+    // TODO MULE-11527 avoid doing unnecessary evaluations
     if (operationExecutor instanceof OperationArgumentResolverFactory) {
       try {
         return ((OperationArgumentResolverFactory) operationExecutor).createArgumentResolver(operationModel)
@@ -334,14 +340,14 @@ public class OperationMessageProcessor extends ExtensionComponent<OperationModel
 
   private ExecutionContextAdapter<OperationModel> createExecutionContext(Event event) throws MuleException {
     Optional<ConfigurationInstance> configuration = getConfiguration(event);
-
-
-
     return createExecutionContext(configuration, getResolutionResult(event, configuration), event);
   }
 
   private Map<String, Object> getResolutionResult(Event event, Optional<ConfigurationInstance> configuration)
       throws MuleException {
-    return resolverSet.resolve(from(event, configuration)).asMap();
+    Map<String, Object> result = resolverSet.resolve(from(event, configuration)).asMap();
+    resolveCursorProvidersInEntries(result);
+
+    return result;
   }
 }

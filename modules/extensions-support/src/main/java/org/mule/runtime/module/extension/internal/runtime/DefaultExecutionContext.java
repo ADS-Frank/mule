@@ -176,6 +176,14 @@ public class DefaultExecutionContext<M extends ComponentModel> implements Execut
     return transactionConfigSupplier.get();
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Map<String, Object> getParameters() {
+    return parameters;
+  }
+
   private TransactionConfig buildTransactionConfig() {
     MuleTransactionConfig transactionConfig = new MuleTransactionConfig();
     transactionConfig.setAction(toActionCode(getTransactionalAction()));

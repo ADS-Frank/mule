@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class DrStrangeOperations {
@@ -44,6 +45,11 @@ public class DrStrangeOperations {
 
   public InputStream toStream(@Config DrStrange dr, @Optional(defaultValue = PAYLOAD) String data) {
     return new ByteArrayInputStream(data.getBytes());
+  }
+
+  public String streamingMap(@Config DrStrange dr, @Content Map<String, Object> map) {
+    Object value = map.get("content");
+    return IOUtils.toString(((InputStream) value));
   }
 
   public void crashCar(@Config DrStrange dr) {

@@ -11,7 +11,10 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.mule.runtime.api.util.DataUnit.KB;
+import static org.mule.runtime.api.util.DataUnit.MB;
 import static org.mule.runtime.extension.api.ExtensionConstants.STREAMING_STRATEGY_PARAMETER_NAME;
 import static org.mule.test.allure.AllureConstants.StreamingFeature.STREAMING;
 import static org.mule.test.allure.AllureConstants.StreamingFeature.StreamingStory.BYTES_STREAMING;
@@ -22,17 +25,27 @@ import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.meta.model.config.ConfigurationModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterModel;
 import org.mule.runtime.api.meta.model.parameter.ParameterizedModel;
+import org.mule.runtime.api.streaming.bytes.CursorStream;
 import org.mule.runtime.api.streaming.bytes.CursorStreamProvider;
+import org.mule.runtime.api.util.DataSize;
 import org.mule.runtime.core.api.Event;
 import org.mule.runtime.core.api.construct.Flow;
+import org.mule.runtime.core.internal.streaming.bytes.BufferedCursorStream;
+import org.mule.runtime.core.internal.streaming.bytes.ByteBufferManager;
+import org.mule.runtime.core.internal.streaming.bytes.InMemoryStreamBuffer;
+import org.mule.runtime.core.internal.streaming.bytes.SimpleByteBufferManager;
+import org.mule.runtime.core.streaming.bytes.InMemoryCursorStreamConfig;
 import org.mule.runtime.core.util.IOUtils;
 import org.mule.tck.probe.JUnitLambdaProbe;
 import org.mule.tck.probe.PollingProber;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -192,6 +205,25 @@ public class BytesStreamingExtensionTestCase extends AbstractStreamingExtensionT
     ParameterModel streamingParameter =
         getStreamingStrategyParameterModel(() -> getConfigurationModel().getSourceModel("bytes-caster").get());
     assertStreamingStrategyParameter(streamingParameter);
+  }
+
+  @Test
+  public void mapWithCursorProvider() throws Exception {
+    CursorStreamProvider provider = mock(CursorStreamProvider.class);
+    DataSize mb = new DataSize(1, MB);
+    ByteBufferManager bufferManager = new SimpleByteBufferManager();
+    CursorStream cursor = new BufferedCursorStream(new InMemoryStreamBuffer(
+        new ByteArrayInputStream(data.getBytes()),
+        new InMemoryCursorStreamConfig(mb, new DataSize(0, MB), mb),
+        bufferManager), provider, bufferManager);
+
+    when(provider.openCursor()).thenReturn(cursor);
+
+    Map<String, Object> map = new HashMap<>();
+    map.put("content", provider);
+
+    Message message = flowRunner("inputStreamingMap").withPayload(map).run().getMessage();
+    assertThat(message.getPayload().getValue(), equalTo(data));
   }
 
   private ParameterModel getStreamingStrategyParameterModel(Supplier<ParameterizedModel> model) {

@@ -8,6 +8,7 @@ package org.mule.runtime.core.util.message;
 
 import static org.mule.runtime.api.message.NullAttributes.NULL_ATTRIBUTES;
 import static org.mule.runtime.api.metadata.MediaType.ANY;
+import static org.mule.runtime.core.api.util.StreamingUtils.streamingContent;
 import org.mule.runtime.api.message.Message;
 import org.mule.runtime.api.metadata.MediaType;
 import org.mule.runtime.core.api.Event;
@@ -60,14 +61,6 @@ public final class MessageUtils {
         .mediaType(mediaType)
         .attributes(result.getAttributes().orElse(NULL_ATTRIBUTES))
         .build();
-  }
-
-  public static Object streamingContent(Object value, CursorProviderFactory cursorProviderFactory, Event event) {
-    if (cursorProviderFactory != null && cursorProviderFactory.accepts(value)) {
-      return cursorProviderFactory.of(event, value);
-    } else {
-      return value;
-    }
   }
 
   /**

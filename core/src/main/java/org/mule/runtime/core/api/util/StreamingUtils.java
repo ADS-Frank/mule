@@ -14,7 +14,12 @@ import org.mule.runtime.api.streaming.Cursor;
 import org.mule.runtime.api.streaming.CursorProvider;
 import org.mule.runtime.api.util.Reference;
 import org.mule.runtime.core.api.Event;
+import org.mule.runtime.core.streaming.CursorProviderFactory;
 import org.mule.runtime.core.util.func.CheckedFunction;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Utilities for handling {@link Cursor} instances
@@ -81,11 +86,54 @@ public final class StreamingUtils {
     }
   }
 
+  public static Object streamingContent(Object value, CursorProviderFactory cursorProviderFactory, Event event) {
+    if (cursorProviderFactory == null) {
+      return value;
+    }
+
+    if (cursorProviderFactory.accepts(value)) {
+      return cursorProviderFactory.of(event, value);
+    } else if (value instanceof Map) {
+      addStreamingAwesomenessInEntries((Map<Object, Object>) value, cursorProviderFactory, event);
+    }
+
+    return value;
+  }
+
+  public static void addStreamingAwesomenessInEntries(Map<Object, Object> map,
+                                                      CursorProviderFactory cursorProviderFactory,
+                                                      Event event) {
+    List<Pair<Object, Object>> streamingKeys = new LinkedList<>();
+
+    map.entrySet().stream()
+        .filter(entry -> cursorProviderFactory.accepts(entry.getValue()) || entry.getValue() instanceof Cursor)
+        .forEach(entry -> {
+          Object value = entry.getValue();
+          value = value instanceof Cursor
+              ? ((Cursor) value).getProvider()
+              : cursorProviderFactory.of(event, value);
+
+          streamingKeys.add(new Pair<>(entry.getKey(), value));
+        });
+
+    streamingKeys.forEach(p -> map.put(p.getFirst(), p.getSecond()));
+  }
+
+  public static <K, V> void resolveCursorProvidersInEntries(Map<K, V> map) {
+    List<Pair> streamingKeys = new LinkedList<>();
+
+    map.entrySet().stream()
+        .filter(entry -> entry.getValue() instanceof CursorProvider)
+        .forEach(entry -> streamingKeys.add(new Pair(entry.getKey(), ((CursorProvider) entry.getValue()).openCursor())));
+
+    streamingKeys.forEach(p -> map.put((K) p.getFirst(), (V) p.getSecond()));
+  }
+
   private static Event replacePayload(Event event, Object newPayload) {
     return Event.builder(event)
         .message(Message.builder(event.getMessage())
-            .payload(newPayload)
-            .build())
+                     .payload(newPayload)
+                     .build())
         .build();
   }
 
@@ -96,5 +144,6 @@ public final class StreamingUtils {
     }
   }
 
-  private StreamingUtils() {}
+  private StreamingUtils() {
+  }
 }

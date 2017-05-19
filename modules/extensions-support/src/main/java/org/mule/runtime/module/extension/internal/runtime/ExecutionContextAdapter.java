@@ -13,6 +13,7 @@ import org.mule.runtime.extension.api.runtime.operation.ExecutionContext;
 import org.mule.runtime.extension.api.runtime.operation.Interceptor;
 import org.mule.runtime.extension.api.runtime.operation.OperationExecutor;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -64,4 +65,6 @@ public interface ExecutionContextAdapter<M extends ComponentModel> extends Event
    * @return The {@link MuleContext} on which the operation is being executed
    */
   MuleContext getMuleContext();
+
+  Map<String, Object> getParameters();
 }
