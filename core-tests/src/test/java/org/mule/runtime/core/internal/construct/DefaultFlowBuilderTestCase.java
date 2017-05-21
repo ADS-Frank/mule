@@ -7,15 +7,21 @@
 
 package org.mule.runtime.core.internal.construct;
 
+import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.fail;
 import static org.junit.rules.ExpectedException.none;
+import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
+import org.mule.runtime.api.lifecycle.Disposable;
 import org.mule.runtime.core.api.MuleContext;
 import org.mule.runtime.core.api.config.MuleConfiguration;
 import org.mule.runtime.core.api.construct.Flow;
@@ -39,7 +45,7 @@ public class DefaultFlowBuilderTestCase extends AbstractMuleTestCase {
 
   public static final String FLOW_NAME = "flowName";
 
-  private MuleContext muleContext = mock(MuleContext.class);
+  private MuleContext muleContext = mock(MuleContext.class, RETURNS_DEEP_STUBS.get());
   private DefaultFlowBuilder flowBuilder = new DefaultFlowBuilder(FLOW_NAME, muleContext);
   private ProcessingStrategyFactory defaultProcessingStrategyFactory = mock(ProcessingStrategyFactory.class);
 
