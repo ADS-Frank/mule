@@ -113,8 +113,8 @@ public class DefaultArtifactDeclarationXmlSerializer implements ArtifactDeclarat
           flow.setAttribute(NAME_ATTRIBUTE_NAME, flowDeclaration.getRefName());
 
           flowDeclaration.getParameterGroups()
-              .stream().filter(p -> p.getValue() instanceof ParameterSimpleValue)
-              .forEach(p -> flow.setAttribute(p.getName(), ((ParameterSimpleValue) p.getValue()).getValue()));
+              .forEach(g -> g.getParameters().stream().filter(p -> p.getValue() instanceof ParameterSimpleValue)
+                  .forEach(p -> flow.setAttribute(p.getName(), ((ParameterSimpleValue) p.getValue()).getValue())));
 
           flowDeclaration.getComponents()
               .forEach(declaration -> appendChildElement(toXmlConverter, flow, modelResolver, declaration));

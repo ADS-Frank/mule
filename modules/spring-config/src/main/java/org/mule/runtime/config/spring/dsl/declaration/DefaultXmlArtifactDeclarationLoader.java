@@ -18,6 +18,7 @@ import static org.mule.runtime.api.app.declaration.fluent.ParameterSimpleValue.c
 import static org.mule.runtime.api.app.declaration.fluent.ParameterSimpleValue.plain;
 import static org.mule.runtime.api.i18n.I18nMessageFactory.createStaticMessage;
 import static org.mule.runtime.api.meta.model.parameter.ParameterGroupModel.CONNECTION;
+import static org.mule.runtime.api.meta.model.parameter.ParameterGroupModel.DEFAULT_GROUP_NAME;
 import static org.mule.runtime.config.spring.XmlConfigurationDocumentLoader.noValidationDocumentLoader;
 import static org.mule.runtime.config.spring.dsl.processor.xml.XmlCustomAttributeHandler.IS_CDATA;
 import static org.mule.runtime.deployment.model.internal.application.MuleApplicationClassLoader.resolveContextArtifactPluginClassLoaders;
@@ -52,6 +53,7 @@ import org.mule.metadata.api.model.ObjectType;
 import org.mule.metadata.api.visitor.MetadataTypeVisitor;
 import org.mule.runtime.api.app.declaration.ArtifactDeclaration;
 import org.mule.runtime.api.app.declaration.ComponentElementDeclaration;
+import org.mule.runtime.api.app.declaration.ParameterGroupElementDeclaration;
 import org.mule.runtime.api.app.declaration.ParameterValue;
 import org.mule.runtime.api.app.declaration.RouteElementDeclaration;
 import org.mule.runtime.api.app.declaration.fluent.ArtifactDeclarer;
@@ -128,7 +130,7 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
   public DefaultXmlArtifactDeclarationLoader(DslResolvingContext context) {
     this.context = context;
     this.resolvers = context.getExtensions().stream()
-      .collect(toMap(e -> e, e -> DslSyntaxResolver.getDefault(e, context)));
+        .collect(toMap(e -> e, e -> DslSyntaxResolver.getDefault(e, context)));
   }
 
   /**
@@ -159,8 +161,8 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
 
     return new XmlApplicationParser(new XmlApplicationServiceRegistry(new SpiServiceRegistry(), context),
                                     resolveContextArtifactPluginClassLoaders()).parse(document.getDocumentElement())
-      .orElseThrow(
-        () -> new MuleRuntimeException(createStaticMessage("Could not load load a Configuration from the given resource")));
+                                        .orElseThrow(
+                                                     () -> new MuleRuntimeException(createStaticMessage("Could not load load a Configuration from the given resource")));
   }
 
   private ArtifactDeclaration declareArtifact(ConfigLine configLine) {
@@ -195,13 +197,13 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
           configurationDeclarer.withRefName(getDeclaredName(configLine));
 
           Map<String, SimpleConfigAttribute> attributes = configLine.getConfigAttributes().values().stream()
-            .filter(a -> !a.getName().equals(NAME_ATTRIBUTE_NAME))
-            .collect(toMap(SimpleConfigAttribute::getName, a -> a));
+              .filter(a -> !a.getName().equals(NAME_ATTRIBUTE_NAME))
+              .collect(toMap(SimpleConfigAttribute::getName, a -> a));
 
 
           List<ConfigLine> configComplexParameters = configLine.getChildren().stream()
-            .filter(config -> declareAsConnectionProvider(ownerExtension, model, configurationDeclarer, config))
-            .collect(toList());
+              .filter(config -> declareAsConnectionProvider(ownerExtension, model, configurationDeclarer, config))
+              .collect(toList());
 
 
           declareParameterizedComponent(model, elementDsl, configurationDeclarer, attributes, configComplexParameters);
@@ -215,13 +217,13 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
                                                   ConfigurationModel model, ConfigurationElementDeclarer configurationDeclarer,
                                                   ConfigLine config) {
         Optional<ConnectionProviderModel> connectionProvider = model.getConnectionProviders().stream()
-          .filter(cp -> dsl.resolve(cp).getElementName().equals(config.getIdentifier()))
-          .findFirst();
+            .filter(cp -> dsl.resolve(cp).getElementName().equals(config.getIdentifier()))
+            .findFirst();
 
         if (!connectionProvider.isPresent()) {
           connectionProvider = ownerExtension.getConnectionProviders().stream()
-            .filter(cp -> dsl.resolve(cp).getElementName().equals(config.getIdentifier()))
-            .findFirst();
+              .filter(cp -> dsl.resolve(cp).getElementName().equals(config.getIdentifier()))
+              .findFirst();
         }
 
         if (!connectionProvider.isPresent()) {
@@ -241,19 +243,19 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
 
     if (!alreadyDeclared.get()) {
       ownerExtension.getTypes().stream()
-        .filter(type -> dsl.resolve(type).map(typeDsl -> typeDsl.getElementName().equals(configLine.getIdentifier()))
-          .orElse(false))
-        .findFirst()
-        .ifPresent(type -> {
-          TopLevelParameterDeclarer topLevelParameter = extensionElementsDeclarer
-            .newGlobalParameter(configLine.getIdentifier())
-            .withRefName(getDeclaredName(configLine));
+          .filter(type -> dsl.resolve(type).map(typeDsl -> typeDsl.getElementName().equals(configLine.getIdentifier()))
+              .orElse(false))
+          .findFirst()
+          .ifPresent(type -> {
+            TopLevelParameterDeclarer topLevelParameter = extensionElementsDeclarer
+                .newGlobalParameter(configLine.getIdentifier())
+                .withRefName(getDeclaredName(configLine));
 
-          type.accept(getParameterDeclarerVisitor(configLine, dsl.resolve(type).get(),
-                                                  value -> topLevelParameter.withValue((ParameterObjectValue) value)));
+            type.accept(getParameterDeclarerVisitor(configLine, dsl.resolve(type).get(),
+                                                    value -> topLevelParameter.withValue((ParameterObjectValue) value)));
 
-          artifactDeclarer.withGlobalElement(topLevelParameter.getDeclaration());
-        });
+            artifactDeclarer.withGlobalElement(topLevelParameter.getDeclaration());
+          });
     }
   }
 
@@ -265,9 +267,9 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
     final FlowElementDeclarer flow = newFlow().withRefName(getDeclaredName(configLine));
     ParameterGroupElementDeclarer general = newParameterGroup();
     configLine.getConfigAttributes().values().stream()
-      .filter(a -> !a.getName().equals(NAME_ATTRIBUTE_NAME) && !a.getName().equals(CONFIG_ATTRIBUTE_NAME))
-      .filter(a -> !a.isValueFromSchema())
-      .forEach(a -> general.withParameter(a.getName(), ParameterSimpleValue.of(a.getValue())));
+        .filter(a -> !a.getName().equals(NAME_ATTRIBUTE_NAME) && !a.getName().equals(CONFIG_ATTRIBUTE_NAME))
+        .filter(a -> !a.isValueFromSchema())
+        .forEach(a -> general.withParameter(a.getName(), ParameterSimpleValue.of(a.getValue())));
 
     flow.withParameterGroup(general.getDeclaration());
 
@@ -294,7 +296,7 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
 
     if (extensionModel == null) {
       throw new MuleRuntimeException(createStaticMessage("Missing Extension model in the context for namespace [" + namespace
-                                                           + "]"));
+          + "]"));
     }
 
     return extensionModel;
@@ -340,12 +342,12 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
           declareParameterizedComponent(model, elementDsl, declarer, line.getConfigAttributes(), line.getChildren());
 
           model.getSuccessCallback()
-            .ifPresent(cb -> declareParameterizedComponent(cb, elementDsl, declarer,
-                                                           line.getConfigAttributes(), line.getChildren()));
+              .ifPresent(cb -> declareParameterizedComponent(cb, elementDsl, declarer,
+                                                             line.getConfigAttributes(), line.getChildren()));
 
           model.getErrorCallback()
-            .ifPresent(cb -> declareParameterizedComponent(cb, elementDsl, declarer,
-                                                           line.getConfigAttributes(), line.getChildren()));
+              .ifPresent(cb -> declareParameterizedComponent(cb, elementDsl, declarer,
+                                                             line.getConfigAttributes(), line.getChildren()));
 
           declarationConsumer.accept((ComponentElementDeclaration) declarer.getDeclaration());
           stop();
@@ -367,7 +369,7 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
           line.getChildren().forEach(child -> {
             ExtensionModel extensionModel = getExtensionModel(child);
             getComponentDeclaringWalker(scope::withComponent, child, forExtension(extensionModel.getName()), dsl)
-              .walk(extensionModel);
+                .walk(extensionModel);
           });
 
           declarationConsumer.accept(scope.getDeclaration());
@@ -389,8 +391,8 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
           declareParameterizedComponent(model, elementDsl, router, line.getConfigAttributes(), line.getChildren());
 
           model.getRouteModels()
-            .forEach(routeModel -> declareRoute(routeModel, elementDsl, line, extensionElementsDeclarer, dsl)
-              .ifPresent(router::withRoute));
+              .forEach(routeModel -> declareRoute(routeModel, elementDsl, line, extensionElementsDeclarer, dsl)
+                  .ifPresent(router::withRoute));
 
           declarationConsumer.accept(router.getDeclaration());
           stop();
@@ -421,31 +423,29 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
           ComponentElementDeclarer declarer = declarerProvider.apply(extensionElementsDeclarer);
           copyExplicitAttributes(model, line.getConfigAttributes(), declarer);
 
-          ParameterGroupElementDeclarer general = newParameterGroup();
           // handle set-payload and set-attributes
           model.getParameterGroupModels().stream()
-            .filter(g -> !g.getName().equals(TRANSFORMER_GENERAL))
-            .filter(ParameterGroupModel::isShowInDsl)
-            .forEach(group -> elementDsl.getChild(group.getName())
-              .ifPresent(groupDsl -> line.getChildren().stream()
-                .filter(c -> c.getIdentifier().equals(groupDsl.getElementName()))
-                .findFirst()
-                .ifPresent(groupConfig -> {
-                  general.withParameter(group.getName(), getTransformParameterBuilder(groupConfig).build());
-                })));
+              .filter(g -> !g.getName().equals(DEFAULT_GROUP_NAME))
+              .filter(ParameterGroupModel::isShowInDsl)
+              .forEach(group -> elementDsl.getChild(group.getName())
+                  .ifPresent(groupDsl -> line.getChildren().stream()
+                      .filter(c -> c.getIdentifier().equals(groupDsl.getElementName()))
+                      .findFirst()
+                      .ifPresent(groupConfig -> declarer.withParameterGroup(createTransformInlineGroup(group, groupConfig)))));
 
           // handle set-variable
+          ParameterGroupElementDeclarer general = newParameterGroup();
           model.getAllParameterModels().stream().filter(g -> g.getName().equals(TRANSFORMER_SET_VARIABLE)).findFirst()
-            .ifPresent(group -> {
-              ParameterListValue.Builder setVariablesListBuilder = ElementDeclarer.newListValue();
-              elementDsl.getChild(TRANSFORMER_GENERAL).get().getChild(TRANSFORMER_SET_VARIABLE)
-                .ifPresent(groupDsl -> line.getChildren().stream()
-                  .filter(c -> groupDsl.getElementName().contains(c.getIdentifier()))
-                  .forEach(groupConfig -> {
-                    setVariablesListBuilder.withValue(getTransformParameterBuilder(groupConfig).build());
-                  }));
-                  general.withParameter(TRANSFORMER_SET_VARIABLE, setVariablesListBuilder.build());
-            });
+              .ifPresent(group -> {
+                ParameterListValue.Builder setVariablesListBuilder = ElementDeclarer.newListValue();
+                elementDsl.getChild(TRANSFORMER_SET_VARIABLE)
+                    .ifPresent(groupDsl -> line.getChildren().stream()
+                        .filter(c -> groupDsl.getElementName().contains(c.getIdentifier()))
+                        .forEach(variableConfig -> {
+                          setVariablesListBuilder.withValue(createTransformVariablesItem(variableConfig));
+                        }));
+                general.withParameter(TRANSFORMER_SET_VARIABLE, setVariablesListBuilder.build());
+              });
 
           declarer.withParameterGroup(general.getDeclaration());
           declarationConsumer.accept((ComponentElementDeclaration) declarer.getDeclaration());
@@ -455,21 +455,36 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
     };
   }
 
-  private ParameterObjectValue.Builder getTransformParameterBuilder(ConfigLine groupConfig) {
-    ParameterObjectValue.Builder objectBuilder = ElementDeclarer.newObjectValue();
-    copyExplicitAttributes(groupConfig.getConfigAttributes(), objectBuilder);
+  private ParameterGroupElementDeclaration createTransformInlineGroup(ParameterGroupModel group,
+                                                                        ConfigLine groupConfig) {
+
+    ParameterGroupElementDeclarer groupDeclarer = newParameterGroup(group.getName());
+    groupConfig.getConfigAttributes().values().stream()
+      .filter(a -> !a.getName().equals(NAME_ATTRIBUTE_NAME) && !a.getName().equals(CONFIG_ATTRIBUTE_NAME))
+      .filter(a -> !a.isValueFromSchema())
+      .forEach(a -> group.getParameter(a.getName())
+        .ifPresent(parameter -> groupDeclarer.withParameter(a.getName(), ParameterSimpleValue.of(a.getValue()))));
 
     // add DW script text content to script parameter
-    if (groupConfig.getTextContent() != null) {
-      ParameterValue value;
-      if (isCData(groupConfig)) {
-        value = plain(groupConfig.getTextContent());
-      } else {
-        value = cdata(groupConfig.getTextContent());
-      }
+    String content = groupConfig.getTextContent();
+    if (content != null) {
+      ParameterValue value = isCData(groupConfig) ? plain(content) : cdata(content);
+      groupDeclarer.withParameter(SCRIPT, value);
+    }
+    return groupDeclarer.getDeclaration();
+  }
+
+  private ParameterObjectValue createTransformVariablesItem(ConfigLine configLine) {
+    ParameterObjectValue.Builder objectBuilder = ElementDeclarer.newObjectValue();
+    copyExplicitAttributes(configLine.getConfigAttributes(), objectBuilder);
+
+    // add DW script text content to script parameter
+    String content = configLine.getTextContent();
+    if (content != null) {
+      ParameterValue value = isCData(configLine) ? plain(content) : cdata(content);
       objectBuilder.withParameter(SCRIPT, value);
     }
-    return objectBuilder;
+    return objectBuilder.build();
   }
 
   private boolean isCData(ConfigLine config) {
@@ -480,28 +495,27 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
                                                          ElementDeclarer elementsDeclarer, DslSyntaxResolver dsl) {
     Reference<RouteElementDeclaration> declaration = new Reference<>();
     elementDsl.getChild(model.getName())
-      .ifPresent(routeDsl -> line.getChildren().stream()
-        .filter(child -> child.getIdentifier().equals(routeDsl.getElementName()))
-        .findFirst()
-        .ifPresent(routeConfig -> {
-          RouteElementDeclarer route = elementsDeclarer.newRoute(model.getName());
-          declareParameterizedComponent(model, routeDsl, route,
-                                        routeConfig.getConfigAttributes(), routeConfig.getChildren());
-          routeConfig.getChildren()
-            .forEach(child -> {
-              ExtensionModel extensionModel = getExtensionModel(child);
-              getComponentDeclaringWalker(route::withComponent, child, forExtension(extensionModel.getName()), dsl)
-                .walk(extensionModel);
-            });
+        .ifPresent(routeDsl -> line.getChildren().stream()
+            .filter(child -> child.getIdentifier().equals(routeDsl.getElementName()))
+            .findFirst()
+            .ifPresent(routeConfig -> {
+              RouteElementDeclarer route = elementsDeclarer.newRoute(model.getName());
+              declareParameterizedComponent(model, routeDsl, route,
+                                            routeConfig.getConfigAttributes(), routeConfig.getChildren());
+              routeConfig.getChildren()
+                  .forEach(child -> {
+                    ExtensionModel extensionModel = getExtensionModel(child);
+                    getComponentDeclaringWalker(route::withComponent, child, forExtension(extensionModel.getName()), dsl)
+                        .walk(extensionModel);
+                  });
 
-          declaration.set(route.getDeclaration());
-        }));
+              declaration.set(route.getDeclaration());
+            }));
 
     return Optional.ofNullable(declaration.get());
   }
 
   private void declareParameterizedComponent(ParameterizedModel model, DslElementSyntax elementDsl,
-                                             // ParameterizedBuilder<String, ParameterValue, ?> declarer,
                                              ParameterizedElementDeclarer declarer,
                                              Map<String, SimpleConfigAttribute> configAttributes,
                                              List<ConfigLine> children) {
@@ -513,34 +527,35 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
                                       ParameterizedElementDeclarer declarer) {
 
     model.getParameterGroupModels()
-      .forEach(group -> {
-        if (group.isShowInDsl()) {
-          modelDsl.getChild(group.getName())
-            .ifPresent(groupDsl -> children.stream()
-              .filter(c -> c.getIdentifier().equals(groupDsl.getElementName()))
-              .findFirst()
-              .ifPresent(groupConfig -> declareInlineGroup(group, groupDsl, groupConfig, declarer)));
-        } else {
-          ParameterGroupElementDeclarer groupDeclarer = newParameterGroup(group.getName());
-          group.getParameterModels()
-            .forEach(param -> modelDsl.getChild(param.getName())
-              .ifPresent(paramDsl -> {
-                if (isInfrastructure(param)) {
-                  handleInfrastructure(param, children, declarer);
-                } else {
-                  children.stream()
-                    .filter(c -> c.getIdentifier().equals(paramDsl.getElementName()))
+        .forEach(group -> {
+          if (group.isShowInDsl()) {
+            modelDsl.getChild(group.getName())
+                .ifPresent(groupDsl -> children.stream()
+                    .filter(c -> c.getIdentifier().equals(groupDsl.getElementName()))
                     .findFirst()
-                    .ifPresent(paramConfig -> param.getType()
-                      .accept(getParameterDeclarerVisitor(paramConfig, paramDsl,
-                                                          value -> groupDeclarer.withParameter(param.getName(), value))));
-                }
-              }));
-          if (!groupDeclarer.getDeclaration().getParameters().isEmpty()){
-            declarer.withParameterGroup(groupDeclarer.getDeclaration());
+                    .ifPresent(groupConfig -> declareInlineGroup(group, groupDsl, groupConfig, declarer)));
+          } else {
+            ParameterGroupElementDeclarer groupDeclarer = newParameterGroup(group.getName());
+            group.getParameterModels()
+                .forEach(param -> modelDsl.getChild(param.getName())
+                    .ifPresent(paramDsl -> {
+                      if (isInfrastructure(param)) {
+                        handleInfrastructure(param, children, declarer);
+                      } else {
+                        children.stream()
+                            .filter(c -> c.getIdentifier().equals(paramDsl.getElementName()))
+                            .findFirst()
+                            .ifPresent(paramConfig -> param.getType()
+                                .accept(getParameterDeclarerVisitor(paramConfig, paramDsl,
+                                                                    value -> groupDeclarer.withParameter(param.getName(),
+                                                                                                         value))));
+                      }
+                    }));
+            if (!groupDeclarer.getDeclaration().getParameters().isEmpty()) {
+              declarer.withParameterGroup(groupDeclarer.getDeclaration());
+            }
           }
-        }
-      });
+        });
   }
 
   private void declareInlineGroup(ParameterGroupModel model, DslElementSyntax dsl, ConfigLine config,
@@ -558,12 +573,12 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
                                             ParameterizedBuilder<String, ParameterValue, ?> groupBuilder) {
 
     groupChilds.forEach(child -> group.getParameterModels().stream()
-      .filter(param -> groupDsl.getChild(param.getName())
-        .map(dsl -> dsl.getElementName().equals(child.getIdentifier())).orElse(false))
-      .findFirst()
-      .ifPresent(param -> param.getType()
-        .accept(getParameterDeclarerVisitor(child, groupDsl.getChild(param.getName()).get(),
-                                            value -> groupBuilder.withParameter(param.getName(), value)))));
+        .filter(param -> groupDsl.getChild(param.getName())
+            .map(dsl -> dsl.getElementName().equals(child.getIdentifier())).orElse(false))
+        .findFirst()
+        .ifPresent(param -> param.getType()
+            .accept(getParameterDeclarerVisitor(child, groupDsl.getChild(param.getName()).get(),
+                                                value -> groupBuilder.withParameter(param.getName(), value)))));
   }
 
   private MetadataTypeVisitor getParameterDeclarerVisitor(final ConfigLine config,
@@ -582,11 +597,11 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
       public void visitArrayType(ArrayType arrayType) {
         ParameterListValue.Builder listBuilder = ElementDeclarer.newListValue();
         config.getChildren()
-          .forEach(item -> arrayType.getType().accept(
-            getParameterDeclarerVisitor(item,
-                                        paramDsl.getGeneric(arrayType.getType())
-                                          .get(),
-                                        listBuilder::withValue)));
+            .forEach(item -> arrayType.getType().accept(
+                                                        getParameterDeclarerVisitor(item,
+                                                                                    paramDsl.getGeneric(arrayType.getType())
+                                                                                        .get(),
+                                                                                    listBuilder::withValue)));
 
         valueConsumer.accept(listBuilder.build());
       }
@@ -617,14 +632,14 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
 
   private void createMapValue(ParameterObjectValue.Builder objectValue, ConfigLine config) {
     config.getChildren().stream()
-      .map(ConfigLine::getConfigAttributes)
-      .forEach(entry -> {
-        SimpleConfigAttribute entryKey = entry.get(KEY_ATTRIBUTE_NAME);
-        SimpleConfigAttribute entryValue = entry.get(VALUE_ATTRIBUTE_NAME);
-        if (entryKey != null && entryValue != null) {
-          objectValue.withParameter(entryKey.getValue(), entryValue.getValue());
-        }
-      });
+        .map(ConfigLine::getConfigAttributes)
+        .forEach(entry -> {
+          SimpleConfigAttribute entryKey = entry.get(KEY_ATTRIBUTE_NAME);
+          SimpleConfigAttribute entryValue = entry.get(VALUE_ATTRIBUTE_NAME);
+          if (entryKey != null && entryValue != null) {
+            objectValue.withParameter(entryKey.getValue(), entryValue.getValue());
+          }
+        });
   }
 
   private void createWrappedObject(ObjectType objectType, ParameterObjectValue.Builder objectValue, ConfigLine config) {
@@ -633,12 +648,12 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
     Set<ObjectType> subTypes = context.getTypeCatalog().getSubTypes(objectType);
     if (!subTypes.isEmpty()) {
       subTypes.stream()
-        .filter(subType -> wrappedElementResolver.resolve(subType)
-          .map(dsl -> dsl.getElementName().equals(wrappedConfig.getIdentifier()))
-          .orElse(false))
-        .findFirst()
-        .ifPresent(subType -> createObjectValueFromType(subType, objectValue, wrappedConfig,
-                                                        wrappedElementResolver.resolve(subType).get()));
+          .filter(subType -> wrappedElementResolver.resolve(subType)
+              .map(dsl -> dsl.getElementName().equals(wrappedConfig.getIdentifier()))
+              .orElse(false))
+          .findFirst()
+          .ifPresent(subType -> createObjectValueFromType(subType, objectValue, wrappedConfig,
+                                                          wrappedElementResolver.resolve(subType).get()));
 
       // TODO MULE-12002: Revisit DslSyntaxUtils as part of the API
     } else if (isExtensible(objectType)) {
@@ -654,17 +669,17 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
     copyExplicitAttributes(config.getConfigAttributes(), objectValue);
 
     config.getChildren().forEach(fieldConfig -> objectType.getFields().stream()
-      .filter(fieldType -> paramDsl.getContainedElement(getLocalPart(fieldType))
-        .map(fieldDsl -> fieldDsl.getElementName().equals(fieldConfig.getIdentifier())).orElse(false))
-      .findFirst()
-      .ifPresent(fieldType -> fieldType.getValue().accept(
-        getParameterDeclarerVisitor(fieldConfig,
-                                    paramDsl
-                                      .getContainedElement(getLocalPart(fieldType))
-                                      .get(),
-                                    fieldValue -> objectValue
-                                      .withParameter(getLocalPart(fieldType),
-                                                     fieldValue)))));
+        .filter(fieldType -> paramDsl.getContainedElement(getLocalPart(fieldType))
+            .map(fieldDsl -> fieldDsl.getElementName().equals(fieldConfig.getIdentifier())).orElse(false))
+        .findFirst()
+        .ifPresent(fieldType -> fieldType.getValue().accept(
+                                                            getParameterDeclarerVisitor(fieldConfig,
+                                                                                        paramDsl
+                                                                                            .getContainedElement(getLocalPart(fieldType))
+                                                                                            .get(),
+                                                                                        fieldValue -> objectValue
+                                                                                            .withParameter(getLocalPart(fieldType),
+                                                                                                           fieldValue)))));
   }
 
   private void handleInfrastructure(final ParameterModel paramModel,
@@ -675,35 +690,35 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
       case RECONNECTION_STRATEGY_PARAMETER_NAME:
 
         findAnyMatchingChildById(declaredConfigs, RECONNECT_ELEMENT_IDENTIFIER, RECONNECT_FOREVER_ELEMENT_IDENTIFIER)
-          .ifPresent(config -> {
-            ParameterObjectValue.Builder reconnection = newObjectValue().ofType(config.getIdentifier());
-            copyExplicitAttributes(config.getConfigAttributes(), reconnection);
-            declarer.withParameterGroup(newParameterGroup(CONNECTION)
-                                          .withParameter(RECONNECTION_STRATEGY_PARAMETER_NAME, reconnection.build())
-                                          .getDeclaration());
-          });
+            .ifPresent(config -> {
+              ParameterObjectValue.Builder reconnection = newObjectValue().ofType(config.getIdentifier());
+              copyExplicitAttributes(config.getConfigAttributes(), reconnection);
+              declarer.withParameterGroup(newParameterGroup(CONNECTION)
+                  .withParameter(RECONNECTION_STRATEGY_PARAMETER_NAME, reconnection.build())
+                  .getDeclaration());
+            });
         return;
 
       case REDELIVERY_POLICY_PARAMETER_NAME:
         findAnyMatchingChildById(declaredConfigs, REDELIVERY_POLICY_ELEMENT_IDENTIFIER)
-          .ifPresent(config -> {
-            ParameterObjectValue.Builder redelivery = newObjectValue();
-            copyExplicitAttributes(config.getConfigAttributes(), redelivery);
-            declarer.withParameterGroup(newParameterGroup()
-                                          .withParameter(REDELIVERY_POLICY_PARAMETER_NAME, redelivery.build())
-                                          .getDeclaration());
-          });
+            .ifPresent(config -> {
+              ParameterObjectValue.Builder redelivery = newObjectValue();
+              copyExplicitAttributes(config.getConfigAttributes(), redelivery);
+              declarer.withParameterGroup(newParameterGroup()
+                  .withParameter(REDELIVERY_POLICY_PARAMETER_NAME, redelivery.build())
+                  .getDeclaration());
+            });
         return;
 
       case POOLING_PROFILE_PARAMETER_NAME:
         findAnyMatchingChildById(declaredConfigs, POOLING_PROFILE_ELEMENT_IDENTIFIER)
-          .ifPresent(config -> {
-            ParameterObjectValue.Builder poolingProfile = newObjectValue();
-            cloneAsDeclaration(config, poolingProfile);
-            declarer.withParameterGroup(newParameterGroup(CONNECTION)
-              .withParameter(POOLING_PROFILE_PARAMETER_NAME, poolingProfile.build())
-              .getDeclaration());
-          });
+            .ifPresent(config -> {
+              ParameterObjectValue.Builder poolingProfile = newObjectValue();
+              cloneAsDeclaration(config, poolingProfile);
+              declarer.withParameterGroup(newParameterGroup(CONNECTION)
+                  .withParameter(POOLING_PROFILE_PARAMETER_NAME, poolingProfile.build())
+                  .getDeclaration());
+            });
         return;
 
 
@@ -712,25 +727,25 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
         findAnyMatchingChildById(declaredConfigs,
                                  REPEATABLE_FILE_STORE_BYTES_STREAM_ALIAS, REPEATABLE_IN_MEMORY_BYTES_STREAM_ALIAS,
                                  NON_REPEATABLE_BYTE_STREAM_ALIAS)
-          .ifPresent(config -> {
-            ParameterObjectValue.Builder streaming = newObjectValue()
-              .ofType(config.getIdentifier());
-            cloneAsDeclaration(config, streaming);
-            declarer.withParameterGroup(newParameterGroup()
-                                          .withParameter(STREAMING_STRATEGY_PARAMETER_NAME, streaming.build())
-              .getDeclaration());
-          });
+                                     .ifPresent(config -> {
+                                       ParameterObjectValue.Builder streaming = newObjectValue()
+                                           .ofType(config.getIdentifier());
+                                       cloneAsDeclaration(config, streaming);
+                                       declarer.withParameterGroup(newParameterGroup()
+                                           .withParameter(STREAMING_STRATEGY_PARAMETER_NAME, streaming.build())
+                                           .getDeclaration());
+                                     });
         return;
 
       case TLS_PARAMETER_NAME:
         findAnyMatchingChildById(declaredConfigs, TLS_CONTEXT_ELEMENT_IDENTIFIER)
-          .ifPresent(config -> {
-            ParameterObjectValue.Builder tls = newObjectValue();
-            cloneAsDeclaration(config, tls);
-            declarer.withParameterGroup(newParameterGroup(CONNECTION)
-                                          .withParameter(TLS_PARAMETER_NAME, tls.build())
-                                          .getDeclaration());
-          });
+            .ifPresent(config -> {
+              ParameterObjectValue.Builder tls = newObjectValue();
+              cloneAsDeclaration(config, tls);
+              declarer.withParameterGroup(newParameterGroup()
+                  .withParameter(TLS_PARAMETER_NAME, tls.build())
+                  .getDeclaration());
+            });
         return;
 
       case DISABLE_CONNECTION_VALIDATION_PARAMETER_NAME:
@@ -756,25 +771,25 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
   private void copyExplicitAttributes(Map<String, SimpleConfigAttribute> attributes,
                                       ParameterizedBuilder<String, ParameterValue, ?> builder) {
     attributes.values().stream()
-      .filter(a -> !a.getName().equals(NAME_ATTRIBUTE_NAME) && !a.getName().equals(CONFIG_ATTRIBUTE_NAME))
-      .filter(a -> !a.isValueFromSchema())
-      .forEach(a -> builder
-        .withParameter(a.getName(), ParameterSimpleValue.of(a.getValue())));
+        .filter(a -> !a.getName().equals(NAME_ATTRIBUTE_NAME) && !a.getName().equals(CONFIG_ATTRIBUTE_NAME))
+        .filter(a -> !a.isValueFromSchema())
+        .forEach(a -> builder
+            .withParameter(a.getName(), ParameterSimpleValue.of(a.getValue())));
   }
 
   private void copyExplicitAttributes(ParameterizedModel model,
                                       Map<String, SimpleConfigAttribute> attributes,
                                       ParameterizedElementDeclarer builder) {
     attributes.values().stream()
-      .filter(a -> !a.getName().equals(NAME_ATTRIBUTE_NAME) && !a.getName().equals(CONFIG_ATTRIBUTE_NAME))
-      .filter(a -> !a.isValueFromSchema())
-      .forEach(a -> model.getParameterGroupModels().stream()
-        .filter(g -> g.getParameter(a.getName()).isPresent())
-        .findFirst()
-        .ifPresent(g -> builder
-          .withParameterGroup(newParameterGroup(g.getName())
-                                .withParameter(a.getName(), ParameterSimpleValue.of(a.getValue()))
-                                .getDeclaration())));
+        .filter(a -> !a.getName().equals(NAME_ATTRIBUTE_NAME) && !a.getName().equals(CONFIG_ATTRIBUTE_NAME))
+        .filter(a -> !a.isValueFromSchema())
+        .forEach(a -> model.getParameterGroupModels().stream()
+            .filter(group -> group.getParameter(a.getName()).isPresent())
+            .findFirst()
+            .ifPresent(group -> builder
+                .withParameterGroup(newParameterGroup(group.getName())
+                    .withParameter(a.getName(), ParameterSimpleValue.of(a.getValue()))
+                    .getDeclaration())));
   }
 
   private void copyChildren(ConfigLine config, ParameterizedBuilder<String, ParameterValue, ?> builder) {
