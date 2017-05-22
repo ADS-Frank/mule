@@ -71,7 +71,7 @@ The following list shows the Mule's build profiles:
 
 To set these profiles,  we should pass them in the maven command line as `-PprofileName`. Therefore, to skip the integration tests we can `-DskipIntegrationTests`.
 
-#### Distributions
+#### Distributions
 
 When you package Mule for distribution, all distributions and related resources are located in the distributions sub-project. 
 
