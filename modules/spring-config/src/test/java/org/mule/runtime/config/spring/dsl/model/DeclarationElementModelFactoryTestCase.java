@@ -261,8 +261,8 @@ public class DeclarationElementModelFactoryTestCase {
 
     assertThat(element.findElement(CONNECTION_PROVIDER_NAME).isPresent(), is(true));
     assertThat(element.findElement(CONTENT_NAME).get().getConfiguration().get().getValue().get(), is("#[{field: value}]"));
-    assertThat(((ComponentConfiguration)connectionElement.getConfiguration().get())
-                 .getParameters().get(BEHAVIOUR_NAME), is("additional"));
+    assertThat(((ComponentConfiguration) connectionElement.getConfiguration().get())
+        .getParameters().get(BEHAVIOUR_NAME), is("additional"));
 
   }
 

@@ -242,29 +242,29 @@ public class DefaultXmlDslElementModelConverter implements XmlDslElementModelCon
     Element transform = doc.createElementNS(EE_NAMESPACE, EE_PREFIX + ":" + TRANSFORM_IDENTIFIER);
     // write set-payload and set-attributes
     elementModel.findElement(buildFromStringRepresentation("mule:set-payload"))
-      .ifPresent(e -> {
-        if (e.getContainedElements().isEmpty() && e.getValue().isPresent()) {
-          transform.setAttribute(e.getDsl().getAttributeName(), e.getValue().get());
-        } else {
-          e.getConfiguration()
-            .ifPresent(c -> transform.appendChild(createTransformTextElement((ComponentConfiguration) c)));
-        }
-      });
+        .ifPresent(e -> {
+          if (e.getContainedElements().isEmpty() && e.getValue().isPresent()) {
+            transform.setAttribute(e.getDsl().getAttributeName(), e.getValue().get());
+          } else {
+            e.getConfiguration()
+                .ifPresent(c -> transform.appendChild(createTransformTextElement((ComponentConfiguration) c)));
+          }
+        });
     elementModel.findElement(buildFromStringRepresentation("mule:set-attributes"))
-      .ifPresent(e -> {
-        if (e.getContainedElements().isEmpty() && e.getValue().isPresent()) {
-          transform.setAttribute(e.getDsl().getAttributeName(), e.getValue().get());
-        } else {
-          e.getConfiguration()
-            .ifPresent(c -> transform.appendChild(createTransformTextElement((ComponentConfiguration) c)));
-        }
-      });
+        .ifPresent(e -> {
+          if (e.getContainedElements().isEmpty() && e.getValue().isPresent()) {
+            transform.setAttribute(e.getDsl().getAttributeName(), e.getValue().get());
+          } else {
+            e.getConfiguration()
+                .ifPresent(c -> transform.appendChild(createTransformTextElement((ComponentConfiguration) c)));
+          }
+        });
 
     // write set-variable
     elementModel.findElement(buildFromStringRepresentation("mule:set-variables"))
-      .ifPresent(e -> e.getContainedElements()
-        .forEach(setVariable -> setVariable.getConfiguration()
-        .ifPresent(c -> transform.appendChild(createTransformTextElement((ComponentConfiguration) c)))));
+        .ifPresent(e -> e.getContainedElements()
+            .forEach(setVariable -> setVariable.getConfiguration()
+                .ifPresent(c -> transform.appendChild(createTransformTextElement((ComponentConfiguration) c)))));
 
     return transform;
   }

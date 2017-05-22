@@ -456,14 +456,14 @@ public class DefaultXmlArtifactDeclarationLoader implements XmlArtifactDeclarati
   }
 
   private ParameterGroupElementDeclaration createTransformInlineGroup(ParameterGroupModel group,
-                                                                        ConfigLine groupConfig) {
+                                                                      ConfigLine groupConfig) {
 
     ParameterGroupElementDeclarer groupDeclarer = newParameterGroup(group.getName());
     groupConfig.getConfigAttributes().values().stream()
-      .filter(a -> !a.getName().equals(NAME_ATTRIBUTE_NAME) && !a.getName().equals(CONFIG_ATTRIBUTE_NAME))
-      .filter(a -> !a.isValueFromSchema())
-      .forEach(a -> group.getParameter(a.getName())
-        .ifPresent(parameter -> groupDeclarer.withParameter(a.getName(), ParameterSimpleValue.of(a.getValue()))));
+        .filter(a -> !a.getName().equals(NAME_ATTRIBUTE_NAME) && !a.getName().equals(CONFIG_ATTRIBUTE_NAME))
+        .filter(a -> !a.isValueFromSchema())
+        .forEach(a -> group.getParameter(a.getName())
+            .ifPresent(parameter -> groupDeclarer.withParameter(a.getName(), ParameterSimpleValue.of(a.getValue()))));
 
     // add DW script text content to script parameter
     String content = groupConfig.getTextContent();
